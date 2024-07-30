@@ -95,6 +95,9 @@ public class SysUserServiceImpl implements ISysUserService {
                 ids.add(user.getDeptId());
                 w.in("u.dept_id", ids);
             }).orderByAsc("u.user_id");
+        if (StringUtils.isNotBlank(user.getExcludeUserIds())) {
+            wrapper.notIn("u.user_id", StringUtils.splitList(user.getExcludeUserIds()));
+        }
         return wrapper;
     }
 
@@ -535,7 +538,7 @@ public class SysUserServiceImpl implements ISysUserService {
         // 删除用户与岗位表
         userPostMapper.delete(new LambdaQueryWrapper<SysUserPost>().in(SysUserPost::getUserId, ids));
         // 防止更新失败导致的数据删除
-        int flag = baseMapper.deleteBatchIds(ids);
+        int flag = baseMapper.deleteByIds(ids);
         if (flag < 1) {
             throw new ServiceException("删除用户失败!");
         }
