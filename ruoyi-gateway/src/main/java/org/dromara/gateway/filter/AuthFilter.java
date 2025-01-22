@@ -1,12 +1,15 @@
 package org.dromara.gateway.filter;
 
 import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.httpauth.basic.SaHttpBasicUtil;
 import cn.dev33.satoken.reactor.context.SaReactorSyncHolder;
 import cn.dev33.satoken.reactor.filter.SaReactorFilter;
 import cn.dev33.satoken.router.SaRouter;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import org.dromara.common.core.constant.HttpStatus;
+import org.dromara.common.core.exception.SseException;
+import org.dromara.common.core.utils.SpringUtils;
 import org.dromara.common.core.utils.StringUtils;
 import org.dromara.common.satoken.utils.LoginHelper;
 import org.dromara.gateway.config.properties.IgnoreWhiteProperties;
@@ -30,18 +33,26 @@ public class AuthFilter {
         return new SaReactorFilter()
             // 拦截地址
             .addInclude("/**")
-            .addExclude("/favicon.ico", "/actuator/**")
+            .addExclude("/favicon.ico", "/actuator", "/actuator/**")
             // 鉴权方法：每次访问进入
             .setAuth(obj -> {
                 // 登录校验 -- 拦截所有路由
                 SaRouter.match("/**")
                     .notMatch(ignoreWhite.getWhites())
                     .check(r -> {
+                        ServerHttpRequest request = SaReactorSyncHolder.getContext().getRequest();
                         // 检查是否登录 是否有token
-                        StpUtil.checkLogin();
+                        try {
+                            StpUtil.checkLogin();
+                        } catch (NotLoginException e) {
+                            if (request.getURI().getPath().contains("sse")) {
+                                throw new SseException(e.getMessage(), e.getCode());
+                            } else {
+                                throw e;
+                            }
+                        }
 
                         // 检查 header 与 param 里的 clientid 与 token 里的是否一致
-                        ServerHttpRequest request = SaReactorSyncHolder.getContext().getRequest();
                         String headerCid = request.getHeaders().getFirst(LoginHelper.CLIENT_KEY);
                         String paramCid = request.getQueryParams().getFirst(LoginHelper.CLIENT_KEY);
                         String clientId = StpUtil.getExtra(LoginHelper.CLIENT_KEY).toString();
@@ -65,4 +76,20 @@ public class AuthFilter {
                 return SaResult.error("认证失败，无法访问系统资源").setCode(HttpStatus.UNAUTHORIZED);
             });
     }
+
+    /**
+     * 对 actuator 健康检查接口 做账号密码鉴权
+     */
+    @Bean
+    public SaReactorFilter actuatorFilter() {
+        String username = SpringUtils.getProperty("spring.cloud.nacos.discovery.metadata.username");
+        String password = SpringUtils.getProperty("spring.cloud.nacos.discovery.metadata.userpassword");
+        return new SaReactorFilter()
+            .addInclude("/actuator", "/actuator/**")
+            .setAuth(obj -> {
+                SaHttpBasicUtil.check(username + ":" + password);
+            })
+            .setError(e -> SaResult.error(e.getMessage()).setCode(HttpStatus.UNAUTHORIZED));
+    }
+
 }

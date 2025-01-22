@@ -18,6 +18,7 @@ import org.dromara.workflow.domain.vo.ModelVo;
 import org.dromara.workflow.service.IActModelService;
 import org.flowable.engine.RepositoryService;
 import org.flowable.engine.repository.Model;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -33,11 +34,11 @@ import java.util.List;
 @Validated
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/workflow/model")
+@RequestMapping("/model")
 public class ActModelController extends BaseController {
 
-    private final RepositoryService repositoryService;
-
+    @Autowired(required = false)
+    private RepositoryService repositoryService;
     private final IActModelService actModelService;
 
 

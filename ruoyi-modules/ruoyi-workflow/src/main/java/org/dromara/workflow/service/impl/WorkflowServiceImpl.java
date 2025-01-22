@@ -8,6 +8,8 @@ import org.dromara.workflow.service.IActProcessInstanceService;
 import org.dromara.workflow.service.WorkflowService;
 import org.dromara.workflow.utils.WorkflowUtils;
 import org.flowable.engine.RuntimeService;
+import org.flowable.engine.TaskService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,8 +24,9 @@ import java.util.Map;
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
 
+    @Autowired(required = false)
+    private TaskService taskService;
     private final IActProcessInstanceService actProcessInstanceService;
-    private final RuntimeService runtimeService;
     private final IActHiProcinstService actHiProcinstService;
     /**
      * 运行中的实例 删除程实例，删除历史记录，删除业务与流程关联信息
@@ -65,7 +68,7 @@ public class WorkflowServiceImpl implements WorkflowService {
      */
     @Override
     public void setVariable(String taskId, String variableName, Object value) {
-        runtimeService.setVariable(taskId, variableName, value);
+        taskService.setVariable(taskId, variableName, value);
     }
 
     /**
@@ -76,7 +79,7 @@ public class WorkflowServiceImpl implements WorkflowService {
      */
     @Override
     public void setVariables(String taskId, Map<String, Object> variables) {
-        runtimeService.setVariables(taskId, variables);
+        taskService.setVariables(taskId, variables);
     }
 
     /**
@@ -88,7 +91,7 @@ public class WorkflowServiceImpl implements WorkflowService {
      */
     @Override
     public void setVariableLocal(String taskId, String variableName, Object value) {
-        runtimeService.setVariableLocal(taskId, variableName, value);
+        taskService.setVariableLocal(taskId, variableName, value);
     }
 
     /**
@@ -99,7 +102,7 @@ public class WorkflowServiceImpl implements WorkflowService {
      */
     @Override
     public void setVariablesLocal(String taskId, Map<String, Object> variables) {
-        runtimeService.setVariablesLocal(taskId, variables);
+        taskService.setVariablesLocal(taskId, variables);
     }
 
     /**

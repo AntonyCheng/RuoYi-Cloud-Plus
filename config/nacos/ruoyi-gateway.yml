@@ -1,12 +1,5 @@
 # 安全配置
 security:
-  # 防止XSS攻击
-  xss:
-    enabled: true
-    excludeUrls:
-      - /system/notice
-      - /workflow/model/save
-      - /workflow/model/editModelXml
   # 不校验白名单
   ignore:
     whites:
@@ -18,6 +11,7 @@ security:
       - /auth/register
       - /auth/tenant/list
       - /resource/sms/code
+      - /resource/sse/close
       - /*/v3/api-docs
       - /*/error
       - /csrf
@@ -66,6 +60,8 @@ spring:
           uri: lb://ruoyi-workflow
           predicates:
             - Path=/workflow/**
+          filters:
+            - StripPrefix=1
         # 演示服务
         - id: ruoyi-demo
           uri: lb://ruoyi-demo

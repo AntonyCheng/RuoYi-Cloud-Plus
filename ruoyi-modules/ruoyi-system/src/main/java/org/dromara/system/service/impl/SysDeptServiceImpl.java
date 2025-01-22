@@ -77,7 +77,7 @@ public class SysDeptServiceImpl implements ISysDeptService {
 
     private LambdaQueryWrapper<SysDept> buildQueryWrapper(SysDeptBo bo) {
         LambdaQueryWrapper<SysDept> lqw = Wrappers.lambdaQuery();
-        lqw.eq(SysDept::getDelFlag, "0");
+        lqw.eq(SysDept::getDelFlag, UserConstants.DEL_FLAG_NORMAL);
         lqw.eq(ObjectUtil.isNotNull(bo.getDeptId()), SysDept::getDeptId, bo.getDeptId());
         lqw.eq(ObjectUtil.isNotNull(bo.getParentId()), SysDept::getParentId, bo.getParentId());
         lqw.like(StringUtils.isNotBlank(bo.getDeptName()), SysDept::getDeptName, bo.getDeptName());
@@ -280,6 +280,8 @@ public class SysDeptServiceImpl implements ISysDeptService {
                 dept.setAncestors(newAncestors);
                 updateDeptChildren(dept.getDeptId(), newAncestors, oldAncestors);
             }
+        } else {
+            dept.setAncestors(oldDept.getAncestors());
         }
         int result = baseMapper.updateById(dept);
         if (UserConstants.DEPT_NORMAL.equals(dept.getStatus()) && StringUtils.isNotEmpty(dept.getAncestors())
